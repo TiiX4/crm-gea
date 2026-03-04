@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export default function Ventas() {
   const router = useRouter();
   const [numeroCaso, setNumeroCaso] = useState("");
+  const [campania, setCampania] = useState("");
   const [ventas, setVentas] = useState<any[]>([]);
   const [usuario, setUsuario] = useState<any>(null);
 
@@ -35,17 +36,22 @@ export default function Ventas() {
   const registrarVenta = async (e: any) => {
     e.preventDefault();
 
-    if (!numeroCaso) return;
+    if (!numeroCaso || !campania) {
+      alert("Completa todos los campos");
+      return;
+    }
 
     await supabase.from("ventas").insert([
       {
         numero_caso: numeroCaso,
         agente_id: usuario.id,
-        estado: "pendiente"
+        campania: campania,
+        estado: "pendiente",
       },
     ]);
 
     setNumeroCaso("");
+    setCampania("");
     cargarVentas(usuario.id);
   };
 
@@ -54,52 +60,146 @@ export default function Ventas() {
     router.push("/");
   };
 
+  // 📊 MÉTRICAS POR ESTADO
+  const totalVentas = ventas.length;
+  const pendientes = ventas.filter(v => v.estado === "pendiente").length;
+  const enProceso = ventas.filter(v => v.estado === "en proceso").length;
+  const rechazado = ventas.filter(v => v.estado === "rechazado").length;
+  const aprobado = ventas.filter(v => v.estado === "aprobado").length;
+
+  const estadoColor = (estado: string) => {
+    if (estado === "pendiente")
+      return "bg-yellow-100 text-yellow-800";
+    if (estado === "en proceso")
+      return "bg-blue-100 text-blue-800";
+    if (estado === "rechazado")
+      return "bg-red-100 text-red-800";
+    if (estado === "nc")
+      return "bg-gray-200 text-gray-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-10">
+      <div className="max-w-7xl mx-auto">
 
-      <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold text-blue-700">
-          Registro de Venta
-        </h1>
-        <button
-          onClick={cerrarSesion}
-          className="bg-red-600 text-white px-4 py-2 rounded"
-        >
-          Cerrar sesión
-        </button>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800">
+            Bienvenido, {usuario?.nombre}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Panel de ventas
+          </p>
+          <button
+            onClick={cerrarSesion}
+            className="bg-red-500 hover:bg-red-600 transition text-white px-5 py-2 rounded-lg shadow"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+
+        {/* MÉTRICAS */}
+        <div className="grid grid-cols-5 gap-6 mb-10">
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-gray-500 text-sm">Total</h2>
+            <p className="text-3xl font-bold text-blue-700">{totalVentas}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-gray-500 text-sm">Pendiente</h2>
+            <p className="text-3xl font-bold text-yellow-600">{pendientes}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-gray-500 text-sm">En Proceso</h2>
+            <p className="text-3xl font-bold text-blue-600">{enProceso}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-gray-500 text-sm">Rechazado</h2>
+            <p className="text-3xl font-bold text-red-600">{rechazado}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-gray-500 text-sm">Aprobado</h2>
+            <p className="text-3xl font-bold text-gray-700">{aprobado}</p>
+          </div>
+
+        </div>
+
+        {/* Formulario */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-10">
+          <form onSubmit={registrarVenta} className="grid grid-cols-3 gap-6 items-end">
+
+            <div>
+              <label className="block mb-2 font-medium text-gray-600">
+                Número de caso
+              </label>
+              <input
+                type="text"
+                placeholder="Ej: 543334553"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                value={numeroCaso}
+                onChange={(e) => setNumeroCaso(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium text-gray-600">
+                Campaña
+              </label>
+              <select
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                value={campania}
+                onChange={(e) => setCampania(e.target.value)}
+              >
+                <option value="">Seleccionar campaña</option>
+                <option value="CONTACTADOS">CONTACTADOS</option>
+                <option value="INBOUND">INBOUND</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-3 rounded-lg shadow-md h-fit"
+            >
+              Registrar
+            </button>
+
+          </form>
+        </div>
+
+        {/* Tabla */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-blue-100">
+              <tr>
+                <th className="p-4 font-semibold">Caso</th>
+                <th className="p-4 font-semibold">Campaña</th>
+                <th className="p-4 font-semibold">Estado</th>
+                <th className="p-4 font-semibold">Observación</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ventas.map((venta) => (
+                <tr key={venta.id} className="border-t hover:bg-gray-50 transition">
+                  <td className="p-4">{venta.numero_caso}</td>
+                  <td className="p-4">{venta.campania}</td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 text-sm rounded-full ${estadoColor(venta.estado)}`}>
+                      {venta.estado}
+                    </span>
+                  </td>
+                  <td className="p-4">{venta.observacion}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </div>
-
-      <form onSubmit={registrarVenta} className="mb-6 space-y-4">
-        <input
-          placeholder="Número de caso"
-          className="w-full p-3 border rounded"
-          value={numeroCaso}
-          onChange={(e) => setNumeroCaso(e.target.value)}
-        />
-
-        <button className="bg-blue-700 text-white px-6 py-3 rounded">
-          Registrar Venta
-        </button>
-      </form>
-
-      <table className="w-full border bg-white">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Caso</th>
-            <th className="p-2 border">Estado</th>
-            <th className="p-2 border">Observación</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ventas.map((venta) => (
-            <tr key={venta.id}>
-              <td className="p-2 border">{venta.numero_caso}</td>
-              <td className="p-2 border">{venta.estado}</td>
-              <td className="p-2 border">{venta.observacion}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

@@ -5,84 +5,194 @@ import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function TodasVentas() {
+
   const router = useRouter();
   const [ventas, setVentas] = useState<any[]>([]);
-  const [usuario, setUsuario] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("usuario") || "{}");
-
-    if (!user || user.rol !== "backoffice") {
-      router.push("/");
-      return;
-    }
-
-    setUsuario(user);
     cargarVentas();
   }, []);
 
   const cargarVentas = async () => {
-    const { data } = await supabase
+
+    setLoading(true);
+
+    const { data, error } = await supabase
       .from("ventas")
       .select("*")
       .order("fecha", { ascending: false });
 
-    if (data) setVentas(data);
+    if (error) {
+      console.error("Error cargando ventas:", error);
+    }
+
+    if (data) {
+      setVentas(data);
+    }
+
+    setLoading(false);
+
   };
 
-  const tomarVenta = async (id: string) => {
+  const tomarVenta = async (venta: any) => {
+
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+
     const { error } = await supabase
       .from("ventas")
       .update({
-        bo_id: usuario.id,
-        estado: "en proceso"
+        estado: "en proceso",
+        bo_id: usuario.id
       })
-      .eq("id", id)
-      .is("bo_id", null);
+      .eq("id", venta.id);
 
-    if (!error) cargarVentas();
+    if (error) {
+      console.error("Error tomando venta:", error);
+      return;
+    }
+
+    cargarVentas();
+
   };
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
 
-      <h2 className="text-2xl font-bold mb-6">Todas las Ventas</h2>
+    <div className="min-h-screen bg-gray-100 p-10">
 
-      <table className="w-full border bg-white">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Caso</th>
-            <th className="p-2 border">Usuario E</th>
-            <th className="p-2 border">Estado</th>
-            <th className="p-2 border">Acción</th>
-          </tr>
-        </thead>
+      {/* HEADER */}
 
-        <tbody>
-          {ventas.map((venta) => (
-            <tr key={venta.id}>
-              <td className="p-2 border">{venta.numero_caso}</td>
-              <td className="p-2 border">{venta.usuario_e}</td>
-              <td className="p-2 border">{venta.estado}</td>
-              <td className="p-2 border">
+      <div className="flex justify-between mb-6 items-center">
 
-                {!venta.bo_id ? (
-                  <button
-                    onClick={() => tomarVenta(venta.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                  >
-                    Tomar
-                  </button>
-                ) : (
-                  <span className="text-gray-400">Tomada</span>
-                )}
+        <h1 className="text-3xl font-bold">
+          Todas las ventas
+        </h1>
 
-              </td>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+        >
+          Regresar
+        </button>
+
+      </div>
+
+      {/* TABLA */}
+
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+
+        <table className="w-full">
+
+          <thead className="bg-gray-100">
+
+            <tr>
+
+              <th className="p-4 text-left">Caso</th>
+              <th className="p-4 text-left">Tipo</th>
+              <th className="p-4 text-left">Usuario</th>
+              <th className="p-4 text-left">Estado</th>
+              <th className="p-4 text-left">Acción</th>
+
             </tr>
-          ))}
-        </tbody>
-      </table>
+
+          </thead>
+
+          <tbody>
+
+            {loading && (
+
+              <tr>
+                <td colSpan={5} className="p-6 text-center text-gray-500">
+                  Cargando ventas...
+                </td>
+              </tr>
+
+            )}
+
+            {!loading && ventas.length === 0 && (
+
+              <tr>
+                <td colSpan={5} className="p-6 text-center text-gray-500">
+                  No hay ventas registradas
+                </td>
+              </tr>
+
+            )}
+
+            {ventas.map((v) => (
+
+              <tr
+                key={v.id}
+                className="border-t hover:bg-gray-50 transition"
+              >
+
+                {/* CASO */}
+
+                <td className="p-4 font-mono">
+                  {v.numero_caso}
+                </td>
+
+                {/* TIPO */}
+
+                <td className="p-4">
+
+                  {v.tipo === "bono"
+                    ? "🎁 Bono"
+                    : "💰 Descuento"}
+
+                </td>
+
+                {/* USUARIO AGENTE */}
+
+                <td className="p-4">
+
+                  {v.usuario_e || "Sin usuario"}
+
+                </td>
+
+                {/* ESTADO */}
+
+                <td className="p-4 capitalize">
+
+                  {v.estado}
+
+                </td>
+
+                {/* ACCIÓN */}
+
+                <td className="p-4">
+
+                  {v.estado === "pendiente" ? (
+
+                    <button
+                      onClick={() => tomarVenta(v)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                    >
+                      Tomar
+                    </button>
+
+                  ) : (
+
+                    <span className="text-gray-400">
+                      En proceso
+                    </span>
+
+                  )}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
 
     </div>
+
   );
+
 }

@@ -26,10 +26,10 @@ export default function Home() {
     } else {
       localStorage.setItem("usuario", JSON.stringify(data));
 
-      if (data.rol === "backoffice") {
+    if (data.rol === "backoffice") {
         router.push("/dashboard");
-      } else {
-        router.push("/ventas");
+      } else if (data.rol === "agente") {
+        router.push("/dashboard/agente");
       }
     }
   };

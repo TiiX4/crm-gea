@@ -1,86 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect,useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function MisVentas() {
-  const router = useRouter();
-  const [ventas, setVentas] = useState<any[]>([]);
-  const [usuario, setUsuario] = useState<any>(null);
+export default function MisVentas(){
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("usuario") || "{}");
+const router = useRouter();
 
-    if (!user || user.rol !== "backoffice") {
-      router.push("/");
-      return;
-    }
+const [ventas,setVentas] = useState<any[]>([]);
 
-    setUsuario(user);
-    cargarVentas(user.id);
-  }, []);
+useEffect(()=>{
+cargarVentas()
+},[])
 
-  const cargarVentas = async (boId: string) => {
-    const { data } = await supabase
-      .from("ventas")
-      .select("*")
-      .eq("bo_id", boId)
-      .order("fecha", { ascending: false });
+const cargarVentas = async()=>{
 
-    if (data) setVentas(data);
-  };
+const usuario = JSON.parse(localStorage.getItem("usuario")||"{}")
 
-  const cambiarEstado = async (id: string, estado: string) => {
-    await supabase
-      .from("ventas")
-      .update({ estado })
-      .eq("id", id);
+const {data} = await supabase
+.from("ventas")
+.select("*")
+.eq("bo_id",usuario.id)
+.eq("estado","en proceso")
 
-    cargarVentas(usuario.id);
-  };
+if(data) setVentas(data)
 
-  return (
-    <div className="p-10 bg-gray-100 min-h-screen">
+}
 
-      <h2 className="text-2xl font-bold mb-6">Mis Ventas</h2>
+return(
 
-      <table className="w-full border bg-white">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Caso</th>
-            <th className="p-2 border">Usuario E</th>
-            <th className="p-2 border">Estado</th>
-            <th className="p-2 border">Cambiar Estado</th>
-          </tr>
-        </thead>
+<div className="min-h-screen bg-gray-100 p-10">
 
-        <tbody>
-          {ventas.map((venta) => (
-            <tr key={venta.id}>
-              <td className="p-2 border">{venta.numero_caso}</td>
-              <td className="p-2 border">{venta.usuario_e}</td>
-              <td className="p-2 border">{venta.estado}</td>
-              <td className="p-2 border">
+<div className="flex justify-between mb-6">
 
-                <select
-                  value={venta.estado}
-                  onChange={(e) =>
-                    cambiarEstado(venta.id, e.target.value)
-                  }
-                  className="border p-1 rounded"
-                >
-                  <option value="en proceso">En proceso</option>
-                  <option value="aprobada">Aprobada</option>
-                  <option value="rechazada">Rechazada</option>
-                </select>
+<h1 className="text-3xl font-bold">
+Mis ventas
+</h1>
 
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+<button
+onClick={()=>router.push("/dashboard")}
+className="bg-gray-500 text-white px-4 py-2 rounded"
+>
+Regresar
+</button>
 
-    </div>
-  );
+</div>
+
+<div className="bg-white rounded-xl shadow">
+
+<table className="w-full">
+
+<thead className="bg-gray-100">
+
+<tr>
+<th className="p-4">Caso</th>
+<th className="p-4">Tipo</th>
+<th className="p-4">Estado</th>
+<th className="p-4">Acción</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{ventas.map(v=>(
+
+<tr key={v.id} className="border-t">
+
+<td className="p-4">{v.numero_caso}</td>
+
+<td className="p-4">
+{v.tipo === "bono" ? "🎁 Bono" : "💰 Descuento"}
+</td>
+
+<td className="p-4">{v.estado}</td>
+
+<td className="p-4">
+
+<button
+onClick={()=>router.push(`/ventas/${v.id}`)}
+className="bg-blue-600 text-white px-4 py-2 rounded"
+>
+Gestionar
+</button>
+
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+)
+
 }
