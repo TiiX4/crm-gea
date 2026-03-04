@@ -1,104 +1,115 @@
 "use client";
 
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function MisVentas(){
+export default function MisVentas() {
 
-const router = useRouter();
+  const router = useRouter();
+  const [ventas, setVentas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const [ventas,setVentas] = useState<any[]>([]);
+  useEffect(() => {
+    cargarVentas();
+  }, []);
 
-useEffect(()=>{
-cargarVentas()
-},[])
+  const cargarVentas = async () => {
 
-const cargarVentas = async()=>{
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
 
-const usuario = JSON.parse(localStorage.getItem("usuario")||"{}")
+    const { data, error } = await supabase
+      .from("ventas")
+      .select("*")
+      .eq("bo_id", usuario.id)
+      .order("fecha", { ascending: false });
 
-const {data} = await supabase
-.from("ventas")
-.select("*")
-.eq("bo_id",usuario.id)
-.eq("estado","en proceso")
+    if (error) console.log(error);
 
-if(data) setVentas(data)
+    if (data) setVentas(data);
 
-}
+    setLoading(false);
 
-return(
+  };
 
-<div className="min-h-screen bg-gray-100 p-10">
+  return (
 
-<div className="flex justify-between mb-6">
+    <div className="min-h-screen bg-gray-100 p-10">
 
-<h1 className="text-3xl font-bold">
-Mis ventas
-</h1>
+      <div className="flex justify-between mb-6">
 
-<button
-onClick={()=>router.push("/dashboard")}
-className="bg-gray-500 text-white px-4 py-2 rounded"
->
-Regresar
-</button>
+        <h1 className="text-3xl font-bold">
+          Mis ventas
+        </h1>
 
-</div>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Volver
+        </button>
 
-<div className="bg-white rounded-xl shadow">
+      </div>
 
-<table className="w-full">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
 
-<thead className="bg-gray-100">
+        <table className="w-full">
 
-<tr>
-<th className="p-4">Caso</th>
-<th className="p-4">Tipo</th>
-<th className="p-4">Estado</th>
-<th className="p-4">Acción</th>
-</tr>
+          <thead className="bg-gray-100">
 
-</thead>
+            <tr>
 
-<tbody>
+              <th className="p-4 text-left">Caso</th>
+              <th className="p-4 text-left">Tipo</th>
+              <th className="p-4 text-left">Usuario</th>
+              <th className="p-4 text-left">Estado</th>
+              <th className="p-4 text-left">Tipificar</th>
 
-{ventas.map(v=>(
+            </tr>
 
-<tr key={v.id} className="border-t">
+          </thead>
 
-<td className="p-4">{v.numero_caso}</td>
+          <tbody>
 
-<td className="p-4">
-{v.tipo === "bono" ? "🎁 Bono" : "💰 Descuento"}
-</td>
+            {ventas.map((v) => (
 
-<td className="p-4">{v.estado}</td>
+              <tr key={v.id} className="border-t">
 
-<td className="p-4">
+                <td className="p-4 font-mono">{v.numero_caso}</td>
 
-<button
-onClick={()=>router.push(`/ventas/${v.id}`)}
-className="bg-blue-600 text-white px-4 py-2 rounded"
->
-Gestionar
-</button>
+                <td className="p-4">
+                  {v.tipo === "bono" ? "🎁 Bono" : "💰 Descuento"}
+                </td>
 
-</td>
+                <td className="p-4">
+                  {v.usuario_e || "Sin usuario"}
+                </td>
 
-</tr>
+                <td className="p-4 capitalize">{v.estado}</td>
 
-))}
+                <td className="p-4">
 
-</tbody>
+                  <button
+                    onClick={() => router.push(`/dashboard/ventas/${v.id}`)}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded"
+                  >
+                    Tipificar
+                  </button>
 
-</table>
+                </td>
 
-</div>
+              </tr>
 
-</div>
+            ))}
 
-)
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  );
 
 }

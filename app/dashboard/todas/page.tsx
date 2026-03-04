@@ -146,7 +146,7 @@ export default function TodasVentas() {
 
                 <td className="p-4">
 
-                  {v.usuario_e || "Sin usuario"}
+                  {v.usuario_e || v.agente_id || "Sin usuario"}
 
                 </td>
 

@@ -1,53 +1,178 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function Dashboard(){
+export default function TodasVentas() {
 
-const router = useRouter();
+  const router = useRouter();
+  const [ventas, setVentas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-return(
+  useEffect(() => {
+    cargarVentas();
+  }, []);
 
-<div className="min-h-screen bg-gray-100 p-10">
+  const cargarVentas = async () => {
 
-<div className="flex justify-between items-center mb-10">
+    setLoading(true);
 
-<h1 className="text-3xl font-bold text-blue-700">
-Panel BackOffice
-</h1>
+    const { data, error } = await supabase
+      .from("ventas")
+      .select("*")
+      .order("fecha", { ascending: false });
 
-<button
-onClick={()=>{
-localStorage.removeItem("usuario")
-router.push("/")
-}}
-className="bg-red-500 text-white px-4 py-2 rounded"
->
-Cerrar sesión
-</button>
+    if (error) {
+      console.error("Error cargando ventas:", error);
+    }
 
-</div>
+    if (data) {
+      setVentas(data);
+    }
 
-<div className="flex gap-4">
+    setLoading(false);
 
-<button
-onClick={()=>router.push("/dashboard/todas")}
-className="bg-blue-600 text-white px-6 py-3 rounded-lg"
->
-Todas las ventas
-</button>
+  };
 
-<button
-onClick={()=>router.push("/dashboard/mis-ventas")}
-className="bg-green-600 text-white px-6 py-3 rounded-lg"
->
-Mis ventas
-</button>
+  const tomarVenta = async (venta: any) => {
 
-</div>
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
 
-</div>
+    const { error } = await supabase
+      .from("ventas")
+      .update({
+        estado: "en proceso",
+        bo_id: usuario.id
+      })
+      .eq("id", venta.id);
 
-)
+    if (error) {
+      console.error("Error tomando venta:", error);
+      return;
+    }
+
+    cargarVentas();
+
+  };
+
+  return (
+
+    <div className="min-h-screen bg-gray-100 p-10">
+
+      <div className="flex justify-between mb-6 items-center">
+
+        <h1 className="text-3xl font-bold">
+          Todas las ventas
+        </h1>
+
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+        >
+          Regresar
+        </button>
+
+      </div>
+
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+
+        <table className="w-full">
+
+          <thead className="bg-gray-100">
+
+            <tr>
+
+              <th className="p-4 text-left">Caso</th>
+              <th className="p-4 text-left">Tipo</th>
+              <th className="p-4 text-left">Usuario</th>
+              <th className="p-4 text-left">Estado</th>
+              <th className="p-4 text-left">Acción</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {loading && (
+
+              <tr>
+                <td colSpan={5} className="p-6 text-center text-gray-500">
+                  Cargando ventas...
+                </td>
+              </tr>
+
+            )}
+
+            {!loading && ventas.length === 0 && (
+
+              <tr>
+                <td colSpan={5} className="p-6 text-center text-gray-500">
+                  No hay ventas registradas
+                </td>
+              </tr>
+
+            )}
+
+            {ventas.map((v) => (
+
+              <tr
+                key={v.id}
+                className="border-t hover:bg-gray-50 transition"
+              >
+
+                <td className="p-4 font-mono">
+                  {v.numero_caso}
+                </td>
+
+                <td className="p-4">
+                  {v.tipo === "bono"
+                    ? "🎁 Bono"
+                    : "💰 Descuento"}
+                </td>
+
+                <td className="p-4">
+                  {v.usuario_e || "Sin usuario"}
+                </td>
+
+                <td className="p-4 capitalize">
+                  {v.estado}
+                </td>
+
+                <td className="p-4">
+
+                  {v.estado === "pendiente" ? (
+
+                    <button
+                      onClick={() => tomarVenta(v)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                    >
+                      Tomar
+                    </button>
+
+                  ) : (
+
+                    <span className="text-gray-400">
+                      En proceso
+                    </span>
+
+                  )}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  );
 
 }

@@ -15,10 +15,11 @@ export default function AgenteInicio() {
   const [campania, setCampania] = useState("");
   const [usuarioE, setUsuarioE] = useState("");
   const [callId, setCallId] = useState("");
-  const [numeroCaso, setNumeroCaso] = useState(""); // NUEVO
+  const [numeroCaso, setNumeroCaso] = useState("");
   const [plantilla, setPlantilla] = useState("");
 
   const [caso, setCaso] = useState("");
+  const [usuarioDescuento, setUsuarioDescuento] = useState("");
   const [callIdDescuento, setCallIdDescuento] = useState("");
 
   useEffect(() => {
@@ -39,7 +40,9 @@ export default function AgenteInicio() {
     router.push("/");
   };
 
-  /* REGISTRAR BONO */
+  /* =========================
+     REGISTRAR BONO
+  ========================== */
 
   const registrarBono = async () => {
 
@@ -56,7 +59,7 @@ export default function AgenteInicio() {
           campania: campania,
           usuario_e: usuarioE,
           call_id: callId,
-          numero_caso: numeroCaso, // NUEVO
+          numero_caso: numeroCaso,
           plantilla: plantilla,
           estado: "pendiente"
         }
@@ -68,16 +71,34 @@ export default function AgenteInicio() {
       return;
     }
 
+    const { error: errorVentas } = await supabase
+      .from("ventas")
+      .insert([
+        {
+          numero_caso: numeroCaso,
+          agente_id: usuarioLogeado.id,
+          usuario_e: usuarioE,
+          estado: "pendiente",
+          tipo: "bono"
+        }
+      ]);
+
+    if (errorVentas) {
+      console.log(errorVentas);
+    }
+
     limpiarCampos();
     alert("Bono registrado correctamente");
 
   };
 
-  /* REGISTRAR DESCUENTO */
+  /* =========================
+     REGISTRAR DESCUENTO
+  ========================== */
 
   const registrarDescuento = async () => {
 
-    if (!caso || !callIdDescuento || !campania) {
+    if (!caso || !usuarioDescuento || !callIdDescuento || !campania) {
       alert("Completa todos los campos");
       return;
     }
@@ -89,6 +110,7 @@ export default function AgenteInicio() {
           agente_id: usuarioLogeado.id,
           campania: campania,
           caso: caso,
+          usuario_e: usuarioDescuento,
           callid: callIdDescuento,
           estado: "pendiente"
         }
@@ -98,6 +120,22 @@ export default function AgenteInicio() {
       console.log(error);
       alert("Error al registrar descuento");
       return;
+    }
+
+    const { error: errorVentas } = await supabase
+      .from("ventas")
+      .insert([
+        {
+          numero_caso: caso,
+          agente_id: usuarioLogeado.id,
+          usuario_e: usuarioDescuento,
+          estado: "pendiente",
+          tipo: "descuento"
+        }
+      ]);
+
+    if (errorVentas) {
+      console.log(errorVentas);
     }
 
     limpiarCampos();
@@ -110,9 +148,10 @@ export default function AgenteInicio() {
     setCampania("");
     setUsuarioE("");
     setCallId("");
-    setNumeroCaso(""); // NUEVO
+    setNumeroCaso("");
     setPlantilla("");
     setCaso("");
+    setUsuarioDescuento("");
     setCallIdDescuento("");
 
   };
@@ -120,8 +159,6 @@ export default function AgenteInicio() {
   return (
 
     <div className="min-h-screen bg-gray-50">
-
-      {/* NAVBAR */}
 
       <div className="bg-white shadow-md px-10 py-4 flex justify-between items-center">
 
@@ -157,8 +194,6 @@ export default function AgenteInicio() {
 
       </div>
 
-      {/* CONTENIDO */}
-
       <div className="max-w-5xl mx-auto mt-16 bg-white rounded-3xl shadow-xl p-12">
 
         {!tipo && (
@@ -180,9 +215,6 @@ export default function AgenteInicio() {
               >
                 <div className="text-4xl mb-3">🎁</div>
                 <div className="text-2xl font-semibold">BONO</div>
-                <div className="text-sm opacity-80 mt-2">
-                  Registro completo de bono
-                </div>
               </button>
 
               <button
@@ -191,17 +223,12 @@ export default function AgenteInicio() {
               >
                 <div className="text-4xl mb-3">💲</div>
                 <div className="text-2xl font-semibold">DESCUENTO</div>
-                <div className="text-sm opacity-80 mt-2">
-                  Gestión rápida de descuento
-                </div>
               </button>
 
             </div>
           </>
 
         )}
-
-        {/* BONO */}
 
         {tipo === "bono" && (
 
@@ -271,8 +298,6 @@ export default function AgenteInicio() {
 
         )}
 
-        {/* DESCUENTO */}
-
         {tipo === "descuento" && (
 
           <div className="space-y-6">
@@ -286,6 +311,13 @@ export default function AgenteInicio() {
               className="w-full border p-4 rounded-xl"
               value={caso}
               onChange={(e) => setCaso(e.target.value)}
+            />
+
+            <input
+              placeholder="Usuario"
+              className="w-full border p-4 rounded-xl"
+              value={usuarioDescuento}
+              onChange={(e) => setUsuarioDescuento(e.target.value)}
             />
 
             <input
