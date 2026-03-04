@@ -15,6 +15,7 @@ export default function AgenteInicio() {
   const [campania, setCampania] = useState("");
   const [usuarioE, setUsuarioE] = useState("");
   const [callId, setCallId] = useState("");
+  const [numeroCaso, setNumeroCaso] = useState(""); // NUEVO
   const [plantilla, setPlantilla] = useState("");
 
   const [caso, setCaso] = useState("");
@@ -42,7 +43,7 @@ export default function AgenteInicio() {
 
   const registrarBono = async () => {
 
-    if (!campania || !usuarioE || !callId || !plantilla) {
+    if (!campania || !usuarioE || !callId || !numeroCaso || !plantilla) {
       alert("Completa todos los campos");
       return;
     }
@@ -55,6 +56,7 @@ export default function AgenteInicio() {
           campania: campania,
           usuario_e: usuarioE,
           call_id: callId,
+          numero_caso: numeroCaso, // NUEVO
           plantilla: plantilla,
           estado: "pendiente"
         }
@@ -108,6 +110,7 @@ export default function AgenteInicio() {
     setCampania("");
     setUsuarioE("");
     setCallId("");
+    setNumeroCaso(""); // NUEVO
     setPlantilla("");
     setCaso("");
     setCallIdDescuento("");
@@ -230,6 +233,13 @@ export default function AgenteInicio() {
               className="w-full border p-4 rounded-xl"
               value={callId}
               onChange={(e) => setCallId(e.target.value)}
+            />
+
+            <input
+              placeholder="Número de Caso"
+              className="w-full border p-4 rounded-xl"
+              value={numeroCaso}
+              onChange={(e) => setNumeroCaso(e.target.value)}
             />
 
             <textarea
