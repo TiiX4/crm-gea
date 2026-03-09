@@ -13,14 +13,11 @@ export default function AgenteInicio() {
   const [usuarioLogeado, setUsuarioLogeado] = useState<any>(null);
 
   const [campania, setCampania] = useState("");
-  const [usuarioE, setUsuarioE] = useState("");
-  const [callId, setCallId] = useState("");
+  const [plan, setPlan] = useState("");
   const [numeroCaso, setNumeroCaso] = useState("");
   const [plantilla, setPlantilla] = useState("");
 
   const [caso, setCaso] = useState("");
-  const [usuarioDescuento, setUsuarioDescuento] = useState("");
-  const [callIdDescuento, setCallIdDescuento] = useState("");
 
   useEffect(() => {
 
@@ -46,24 +43,26 @@ export default function AgenteInicio() {
 
   const registrarBono = async () => {
 
-    if (!campania || !usuarioE || !callId || !numeroCaso || !plantilla) {
+    if (!campania || !plan || !numeroCaso || !plantilla) {
       alert("Completa todos los campos");
       return;
     }
 
-    const { error } = await supabase
+    const { data: bonoInsertado, error } = await supabase
       .from("bonos")
       .insert([
         {
           agente_id: usuarioLogeado.id,
+          usuario_e: usuarioLogeado.usuario,
           campania: campania,
-          usuario_e: usuarioE,
-          call_id: callId,
+          plan: plan,
           numero_caso: numeroCaso,
           plantilla: plantilla,
           estado: "pendiente"
         }
-      ]);
+      ])
+      .select()
+      .single();
 
     if (error) {
       console.log(error);
@@ -71,21 +70,19 @@ export default function AgenteInicio() {
       return;
     }
 
-    const { error: errorVentas } = await supabase
+    await supabase
       .from("ventas")
       .insert([
         {
           numero_caso: numeroCaso,
           agente_id: usuarioLogeado.id,
-          usuario_e: usuarioE,
+          usuario_e: usuarioLogeado.usuario,
           estado: "pendiente",
-          tipo: "bono"
+          tipo: "bono",
+          plan: plan,
+          bo_id: bonoInsertado.id
         }
       ]);
-
-    if (errorVentas) {
-      console.log(errorVentas);
-    }
 
     limpiarCampos();
     alert("Bono registrado correctamente");
@@ -98,7 +95,7 @@ export default function AgenteInicio() {
 
   const registrarDescuento = async () => {
 
-    if (!caso || !usuarioDescuento || !callIdDescuento || !campania) {
+    if (!caso || !campania) {
       alert("Completa todos los campos");
       return;
     }
@@ -108,35 +105,31 @@ export default function AgenteInicio() {
       .insert([
         {
           agente_id: usuarioLogeado.id,
+          usuario_e: usuarioLogeado.usuario,
           campania: campania,
           caso: caso,
-          usuario_e: usuarioDescuento,
-          callid: callIdDescuento,
+          callid: "",
           estado: "pendiente"
         }
       ]);
 
     if (error) {
-      console.log(error);
+      console.log("ERROR DESCUENTOS:", error);
       alert("Error al registrar descuento");
       return;
     }
 
-    const { error: errorVentas } = await supabase
+    await supabase
       .from("ventas")
       .insert([
         {
           numero_caso: caso,
           agente_id: usuarioLogeado.id,
-          usuario_e: usuarioDescuento,
+          usuario_e: usuarioLogeado.usuario,
           estado: "pendiente",
           tipo: "descuento"
         }
       ]);
-
-    if (errorVentas) {
-      console.log(errorVentas);
-    }
 
     limpiarCampos();
     alert("Descuento registrado correctamente");
@@ -146,13 +139,10 @@ export default function AgenteInicio() {
   const limpiarCampos = () => {
 
     setCampania("");
-    setUsuarioE("");
-    setCallId("");
+    setPlan("");
     setNumeroCaso("");
     setPlantilla("");
     setCaso("");
-    setUsuarioDescuento("");
-    setCallIdDescuento("");
 
   };
 
@@ -248,19 +238,17 @@ export default function AgenteInicio() {
               <option value="INBOUND">INBOUND</option>
             </select>
 
-            <input
-              placeholder="Usuario"
+            <select
               className="w-full border p-4 rounded-xl"
-              value={usuarioE}
-              onChange={(e) => setUsuarioE(e.target.value)}
-            />
-
-            <input
-              placeholder="Call ID"
-              className="w-full border p-4 rounded-xl"
-              value={callId}
-              onChange={(e) => setCallId(e.target.value)}
-            />
+              value={plan}
+              onChange={(e) => setPlan(e.target.value)}
+            >
+              <option value="">Seleccionar Plan</option>
+              <option value="5GB">5 GB</option>
+              <option value="10GB">10 GB</option>
+              <option value="20GB">20 GB</option>
+              <option value="ILIMITADO">ILIMITADO</option>
+            </select>
 
             <input
               placeholder="Número de Caso"
@@ -307,24 +295,10 @@ export default function AgenteInicio() {
             </h2>
 
             <input
-              placeholder="Caso"
+              placeholder="Número de Caso"
               className="w-full border p-4 rounded-xl"
               value={caso}
               onChange={(e) => setCaso(e.target.value)}
-            />
-
-            <input
-              placeholder="Usuario"
-              className="w-full border p-4 rounded-xl"
-              value={usuarioDescuento}
-              onChange={(e) => setUsuarioDescuento(e.target.value)}
-            />
-
-            <input
-              placeholder="Call ID"
-              className="w-full border p-4 rounded-xl"
-              value={callIdDescuento}
-              onChange={(e) => setCallIdDescuento(e.target.value)}
             />
 
             <select

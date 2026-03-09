@@ -6,12 +6,15 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function Home() {
+
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
+
   const router = useRouter();
 
   const handleLogin = async (e: any) => {
+
     e.preventDefault();
 
     const { data, error } = await supabase
@@ -23,23 +26,26 @@ export default function Home() {
 
     if (error || !data) {
       setMensaje("Usuario o contraseña incorrectos");
-    } else {
-      localStorage.setItem("usuario", JSON.stringify(data));
+      return;
+    }
+
+    localStorage.setItem("usuario", JSON.stringify(data));
 
     if (data.rol === "backoffice") {
-        router.push("/dashboard");
-      } else if (data.rol === "agente") {
-        router.push("/dashboard/agente");
-      }
+      router.push("/dashboard/bo");
+    } 
+    else if (data.rol === "agente") {
+      router.push("/dashboard/agente");
     }
+
   };
 
   return (
+
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
       <div className="bg-white p-10 rounded-2xl shadow-xl w-96">
 
-        {/* LOGO */}
         <div className="flex justify-center mb-6">
           <Image
             src="/logo.png"
@@ -90,5 +96,6 @@ export default function Home() {
       </div>
 
     </div>
+
   );
 }
