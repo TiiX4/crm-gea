@@ -8,7 +8,7 @@ export default function AgregarBono() {
 
 const router = useRouter();
 
-const [linea,setLinea] = useState("");
+const [iccid,setIccid] = useState("");
 const [operador,setOperador] = useState("");
 const [idLlamada,setIdLlamada] = useState("");
 const [usuario,setUsuario] = useState("");
@@ -37,7 +37,7 @@ usuario_e: usuario,
 plantilla: "BONO",
 plan: "BONO",
 
-linea: linea,
+iccid: iccid,
 operador: operador,
 id_llamada: idLlamada,
 usuario: usuario,
@@ -73,7 +73,7 @@ usuario_e: usuario,
 
 estado: "pendiente",
 
-bo_id: user?.id || null   // 👈 guarda el BO automáticamente
+bo_id: user?.id || null
 
 }]);
 
@@ -115,7 +115,6 @@ Registrar Bono
 className="w-full border p-3 rounded"
 value={campania}
 onChange={(e)=>setCampania(e.target.value)}
-
 >
 
 <option value="">Seleccionar campaña</option>
@@ -123,7 +122,6 @@ onChange={(e)=>setCampania(e.target.value)}
 <option value="INBOUND">INBOUND</option>
 
 </select>
-
 </div>
 
 <div>
@@ -133,7 +131,6 @@ onChange={(e)=>setCampania(e.target.value)}
 className="w-full border p-3 rounded"
 value={operador}
 onChange={(e)=>setOperador(e.target.value)}
-
 >
 
 <option value="">Seleccionar operador</option>
@@ -142,16 +139,16 @@ onChange={(e)=>setOperador(e.target.value)}
 <option value="BITEL">BITEL</option>
 
 </select>
-
 </div>
 
 <div>
-<label className="font-semibold">Línea</label>
+<label className="font-semibold">ICCID</label>
 
 <input
 className="w-full border p-3 rounded"
-value={linea}
-onChange={(e)=>setLinea(e.target.value)}
+value={iccid}
+onChange={(e)=>setIccid(e.target.value)}
+placeholder="Ingresar ICCID"
 />
 
 </div>
@@ -185,7 +182,6 @@ onChange={(e)=>setUsuario(e.target.value)}
 className="w-full border p-3 rounded"
 value={status}
 onChange={(e)=>setStatus(e.target.value)}
-
 >
 
 <option value="">Seleccionar</option>
@@ -215,18 +211,16 @@ onChange={(e)=>setObservacion(e.target.value)}
 <button
 onClick={()=>router.push("/dashboard/bo")}
 className="bg-gray-500 text-white px-6 py-2 rounded"
-
 >
-
-Volver </button>
+Volver
+</button>
 
 <button
 onClick={registrarBono}
 className="bg-indigo-600 text-white px-6 py-2 rounded"
-
 >
-
-Registrar bono </button>
+Registrar bono
+</button>
 
 </div>
 
