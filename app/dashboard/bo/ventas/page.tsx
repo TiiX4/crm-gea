@@ -50,9 +50,24 @@ export default function BandejaBO() {
 
     <div className="p-10">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Bandeja BO
-      </h1>
+      {/* HEADER */}
+
+      <div className="flex justify-between items-center mb-6">
+
+        <h1 className="text-2xl font-bold">
+          Bandeja BO
+        </h1>
+
+        <button
+          onClick={() => router.push("/dashboard/bo")}
+          className="bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Volver al panel
+        </button>
+
+      </div>
+
+      {/* TABLA */}
 
       <table className="w-full border">
 

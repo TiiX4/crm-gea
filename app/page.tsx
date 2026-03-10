@@ -29,7 +29,13 @@ export default function Home() {
       return;
     }
 
+    /* Guardar usuario completo */
     localStorage.setItem("usuario", JSON.stringify(data));
+
+    /* Guardar usuario BO para registrar bonos */
+    localStorage.setItem("bo_usuario", data.usuario);
+
+    /* Redirección por rol */
 
     if (data.rol === "backoffice") {
       router.push("/dashboard/bo");
